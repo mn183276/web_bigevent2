@@ -5,4 +5,28 @@ $.ajaxPrefilter(function(options) {
     // 在发起真正的 Ajax 请求之前，统一拼接请求的根路径
     options.url = 'http://ajax.frontend.itheima.net' + options.url
     console.log(options.url);
+    // 统一为有权限的接口设置headers请求头
+    // 判断 以 /my 开头的请求路径，需要在请求头中携带 Authorization 身份认证字段，才能正常访问成功
+    // 1.indexOf('/my/') !== 1 不太准确 因为只有包含('/my/')不管开头结尾有都算有。 可以写成 !== 0
+    // 2.用startswith endwith
+    // console.log(options.url.startswith('http://ajax.frontend.itheima.net/my/'));
+    // if (options.url.startswith('http://ajax.frontend.itheima.net/my/')) {
+    if (options.url.indexOf('/my/') !== 0) {
+        options.headers = {
+                Authorization: localStorage.getItem('token') || ''
+            },
+            // 全局统一挂载 complete 回调函数
+            options.complete = function(res) {
+                // console.log('执行了 complete 回调：')
+                // console.log(res)
+                // 在 complete 回调函数中，可以使用 res.responseJSON 拿到服务器响应回来的数据
+                if (res.responseJSON.status === 1 && res.responseJSON.message === '身份认证失败！') {
+                    //         // 1. 强制清空 token
+                    localStorage.removeItem('token')
+                        // 2. 强制跳转到登录页面
+                    location.href = '/code//login.html'
+                }
+            };
+    }
+
 })
